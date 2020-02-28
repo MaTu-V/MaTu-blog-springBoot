@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.UserBackMapper">
+
+    <!--查询全部背景图信息-->
+    <select id="selUserBack" resultType="UserBack">
+        SELECT * FROM `mt-user-back`
+    </select>
+
+    <!--插入背景图信息-->
+    <insert id="insUserBack" parameterType="UserBack">
+        INSERT INTO `mt-user-back` VALUES (default ,#{url})
+    </insert>
+
+    <!--删除背景图信息-->
+    <delete id="delUserBack">
+        DELETE FROM `mt-user-back` WHERE id IN
+        <foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--更新分类信息-->
+    <update id="updUserBack" parameterType="UserBack">
+       UPDATE `mt-user-back` SET `url`= #{url} WHERE id = #{id}
+    </update>
+
+</mapper>

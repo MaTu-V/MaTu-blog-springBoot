@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.LabelMapper">
+
+    <!--查询全部标签信息-->
+    <select id="selLabel" resultMap="LabelOneCategory">
+        SELECT ml.*,mtc.category_name category FROM `mt-label` ml,`mt-category` mtc where ml.category_id = mtc.id
+    </select>
+    <!--关联分类信息-->
+    <resultMap id="LabelOneCategory" type="Label">
+        <id property="id" column="id"/>
+        <result property="labelName" column="label_name"/>
+        <result property="back" column="back"/>
+        <collection property="category" ofType="Category">
+            <id property="id" column="category_id"/>
+            <result property="categoryName" column="category"/>
+        </collection>
+    </resultMap>
+
+    <select id="selLabelByCategoryId" parameterType="String" resultType="Label">
+        SELECT * FROM `mt-label` WHERE category_id = #{category_id}
+    </select>
+    <!--插入标签信息-->
+    <insert id="insLabel" parameterType="Label">
+        INSERT INTO `mt-label` VALUES (default ,#{labelName},#{back},#{category.id})
+    </insert>
+
+    <!--删除标签信息-->
+    <delete id="delLabel">
+        DELETE FROM `mt-label` WHERE id IN
+        <foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--更新标签信息-->
+    <update id="updLabel" parameterType="Label">
+       UPDATE `mt-label` SET `label_name`= #{labelName},`back`= #{back},`category_id`= #{category.id} WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.CommentMapper">
+
+    <!--查询当前文章的首条评论-->
+    <!--文章id  父评论id为空 查询结果  结果赋值到reviewer中-->
+    <select id="selCommentReviewer" parameterType="String" resultMap="CommentMap">
+        SELECT mc.*,mu.nick_name as reviewer_nick,mu.avatar as reviewer_avatar FROM `mt-comment` AS mc,`mt-user` AS mu WHERE mc.user_id = mu.id AND mc.article_id = #{articleId} AND ISNULL(mc.parent_id) AND mc.state = 0 ORDER BY mc.comment_time DESC
+    </select>
+
+    <!--查询网站评论-->
+    <!--条件 文章id为空-->
+    <select id="selWebSiteCommentReviewer" resultMap="CommentMap">
+        SELECT mc.*,mu.nick_name AS reviewer_nick,mu.avatar AS reviewer_avatar FROM `mt-comment` AS mc,`mt-user` AS mu WHERE mc.user_id = mu.id AND ISNULL(mc.article_id) AND ISNULL(mc.parent_id) AND mc.state = 0 ORDER BY mc.comment_time DESC
+    </select>
+
+    <!--查询当前文章评论下的子评论-->
+    <select id="selCommentReply" resultMap="CommentMap">
+        SELECT mc.*, mu.nick_name as reviewer_nick,mu.avatar as revierer_avatar,(
+	  	  SELECT mup.nick_name FROM `mt-comment` AS mcp,`mt-user` AS mup
+	      WHERE mcp.user_id = mup.id AND mcp.id = mc.parent_id ) AS reply_nick
+        FROM `mt-comment` AS mc,`mt-user` AS mu
+	    WHERE mc.user_id = mu.id AND mc.article_id =#{articleId} AND mc.parent_id = #{parentId} AND mc.state = 0 ORDER BY mc.comment_time ASC
+    </select>
+
+    <!--查询当前网站当前评论下的子评论-->
+    <select id="selWebSiteCommentReply" resultMap="CommentMap">
+        SELECT mc.*, mu.nick_name as reviewer_nick,mu.avatar as revierer_avatar,(
+	  	  SELECT mup.nick_name FROM `mt-comment` AS mcp,`mt-user` AS mup
+	      WHERE mcp.user_id = mup.id AND mcp.id = mc.parent_id ) AS reply_nick
+        FROM `mt-comment` AS mc,`mt-user` AS mu
+	    WHERE mc.user_id = mu.id AND ISNULL(mc.article_id) AND mc.parent_id = #{parentId} AND mc.state = 0 ORDER BY mc.comment_time ASC
+    </select>
+
+    <!--插入评论-->
+    <!--从reviewerUser中提取评论人信息-->
+    <insert id="insComment" parameterType="Comment">
+        INSERT INTO `mt-comment` VALUES (#{id},#{content},#{commentTime},#{likeCounts},0,#{reviewerUser.id},#{articleId},#{parentId})
+    </insert>
+
+
+    <!--                     文章评论结果返回集                    -->
+    <resultMap id="CommentMap" type="Comment">
+        <id property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="commentTime" column="comment_time"/>
+        <result property="likeCounts" column="like_counts"/>
+        <result property="state" column="state"/>
+        <result property="articleId" column="article_id"/>
+        <result property="parentId" column="parent_id"/>
+        <association property="reviewerUser" javaType="User">
+            <id property="id" column="user_id"/>
+            <result property="nickName" column="reviewer_nick"/>
+            <result property="avatar" column="reviewer_avatar"/>
+        </association>
+        <association property="replyUser" javaType="User">
+            <result property="nickName" column="reply_nick"/>
+        </association>
+    </resultMap>
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.UserMapper">
+
+    <!--根据用户id获取信息-->
+    <select id="selUserInfoById" parameterType="String" resultType="User">
+        SELECT mu.*,mui.follow_counts,mui.fans_counts FROM `mt-user` as mu LEFT JOIN `mt-user-info` as mui on mu.id = mui.user_id WHERE mu.id = #{id};
+    </select>
+    <!--更新用户信息-->
+    <update id="updUserInfo">
+        UPDATE `mt-user` SET `nick_name`= #{nickName},`phone`= #{phone},`describe`= #{describe},`avatar`=#{avatar} WHERE id = #{id}
+    </update>
+    <!--邮箱帐户添加-->
+    <update id="updUserEmail">
+        UPDATE `mt-user` SET `email`=#{email} WHERE id=#{userId}
+    </update>
+    <!--关注用户、文章发表统计-->
+    <update id="updUserInfoFollow" parameterType="map" statementType="CALLABLE">
+       {
+          call `mt-user-info-follow`(
+            #{BlogStatus,mode=IN},#{Id,mode=IN},#{followId,mode=IN},#{userId,mode=IN}
+          )
+        }
+    </update>
+    <!--查询用户关注-->
+    <select id="getUserFollow" resultType="User">
+        SELECT mu.id,`avatar`,`nick_name`,`describe`,follow_counts,`fans_counts`,`article_counts` FROM `mt-user` as mu LEFT JOIN `mt-user-info` as mui ON mu.id = mui.user_id
+          WHERE mu.id in(
+            SELECT follow_id FROM `mt-user-follow` as muf WHERE muf.user_id = #{userId})
+    </select>
+    <!--查询用户粉丝-->
+    <select id="getUserFan" resultType="User">
+        SELECT mu.id,`avatar`,`nick_name`,`describe`,follow_counts,`fans_counts`,`article_counts` FROM `mt-user` as mu LEFT JOIN `mt-user-info` as mui ON mu.id = mui.user_id
+          WHERE mu.id in(
+            SELECT follow_id FROM `mt-user-follow` as muf WHERE muf.follow_id = #{userId})
+    </select>
+    <!--查询是否被关注-->
+    <select id="isFollowExists" resultType="int">
+        SELECT COUNT(1) FROM `mt-user-follow` WHERE follow_id=#{followId} AND user_id=#{userId}
+    </select>
+</mapper>

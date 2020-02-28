@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.ArticleMapper">
+    <!--                   管理员针对文章信息操作                      -->
+
+    <!--                   查找所有文章信息操作                        -->
+    <!--根据文章id查询文章信息-->
+    <select id="selArticleById" parameterType="String" resultMap="ArticleMap">
+         SELECT
+	      ma.id,title,summary,content,image,mu.id AS 'user.id',mu.nick_name,mu.describe,establish_time,like_counts,comment_counts,collection_counts,click_counts,category_name
+       FROM
+	      `mt-user` AS mu,
+	      `mt-category` AS mc,
+          `mt-article` AS ma LEFT JOIN
+           `mt-article-information` AS mai
+       ON  ma.id = mai.article_id WHERE ma.user_id = mu.id AND ma.category_id = mc.id AND ma.id=#{id} ORDER BY establish_time DESC
+    </select>
+    <!--查询全部文章信息-->
+    <select id="selArticle" parameterType="int" resultMap="ArticleMap">
+       SELECT
+	      ma.id,title,summary,content,image,mu.id AS 'user.id',mu.nick_name,establish_time,like_counts,comment_counts,click_counts,category_name
+       FROM
+	      `mt-user` AS mu,
+	      `mt-category` AS mc,
+          `mt-article` AS ma LEFT JOIN
+           `mt-article-information` AS mai
+       ON  ma.id = mai.article_id WHERE ma.user_id = mu.id AND ma.category_id = mc.id AND ma.category_id=#{categoryId} ORDER BY establish_time DESC
+    </select>
+
+    <!--查询热门文章信息-->
+    <select id="selHotArticle" resultType="Article">
+       SELECT ma.id,title,image,establish_time,like_counts,click_counts,comment_counts FROM `mt-article-information` AS mai LEFT JOIN `mt-article` AS ma ON mai.article_id = ma.id ORDER BY mai.click_counts DESC
+    </select>
+
+    <!--查询标签下的文章信息-->
+    <select id="selLabelArticle" resultType="Article">
+       SELECT
+          ma.id,title,image,establish_time,like_counts,click_counts,comment_counts
+       FROM
+	      `mt-article` as ma
+	       LEFT JOIN `mt-article-information` as mai
+	    ON mai.article_id=ma.id WHERE ma.id IN (SELECT article_id FROM `mt-article-label` WHERE label_id = #{labelId})
+	    ORDER BY mai.click_counts DESC
+    </select>
+    <!--更新文章信息-->
+    <update id="updArticleInformationById" parameterType="map" statementType="CALLABLE">
+       {
+          call `mt-article-user-focus`(
+            #{BlogStatus,mode=IN},#{Id,mode=IN},#{articleId,mode=IN},#{userId,mode=IN}
+          )
+        }
+    </update>
+    <!--查询文章是否被收藏-->
+    <select id="isArticleCollectionExists" resultType="int">
+        SELECT COUNT(1) FROM `mt-article-user` WHERE article_id=#{articleId} AND user_id=#{userId}
+    </select>
+    <!--                   个人用户文章信息操作                      -->
+    <!--查询个人文章信息-->
+    <select id="selArticleByUserId" parameterType="String" resultMap="ArticleMap">
+       SELECT
+	      ma.id,title,summary,content,image,mu.id AS 'user.id',mu.nick_name,establish_time,like_counts,comment_counts,click_counts,category_name
+       FROM
+	      `mt-user` AS mu,
+	      `mt-category` AS mc,
+          `mt-article` AS ma LEFT JOIN
+           `mt-article-information` AS mai
+       ON  ma.id = mai.article_id WHERE ma.user_id = mu.id AND ma.category_id = mc.id AND mu.id = #{userId}  ORDER BY establish_time DESC
+     </select>
+    <!--添加个人文章信息-->
+    <insert id="insArticle" parameterType="Article">
+        INSERT INTO `mt-article` VALUES (#{id} ,#{title},#{summary},#{content},#{image},#{keywords},#{user.id},#{categories.id},#{establishTime})
+    </insert>
+    <!--为当前个人文章添加标签信息-->
+    <insert id="insArticleLabel" parameterType="map">
+        INSERT INTO `mt-article-label` VALUES
+        <foreach collection="labels" item="item" separator=",">
+            (DEFAULT ,#{articleId},#{item})
+        </foreach>
+    </insert>
+    <!--用户删除个人发表文章标签信息-->
+    <delete id="delArticleLabel" parameterType="String">
+        DELETE FROM `mt-article-label` WHERE article_id=#{articleId}
+    </delete>
+    <!--查找当前个人文章标签信息-->
+    <select id="selArticleLabel" parameterType="String" resultType="Label">
+        SELECT ml.* FROM `mt-article-label` AS mal,`mt-label` AS ml WHERE ml.id = mal.label_id AND mal.article_id = #{articleId}
+    </select>
+
+    <!--更新文章信息-->
+    <update id="updArticle" parameterType="Article">
+        UPDATE `mt-article` SET `title`=#{title},`summary`=#{summary},`content`=#{content},`image`=#{image},`keywords`=#{keywords},`category_id`=#{categories.id},`establish_time`=#{establishTime} WHERE id=#{id}
+    </update>
+
+    <!--用户删除个人发表文章信息-->
+    <delete id="delArticleByUserId">
+        DELETE FROM `mt-article` WHERE id=#{articleId} AND user_id=#{userId}
+    </delete>
+    <!--                     文章结果返回集                    -->
+    <resultMap id="ArticleMap" type="Article">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="summary" column="summary"/>
+        <result property="content" column="content"/>
+        <result property="image" column="image"/>
+        <result property="establishTime" column="establish_time"/>
+        <result property="likeCounts" column="like_counts"/>
+        <result property="clickCounts" column="click_counts"/>
+        <result property="commentCounts" column="comment_counts"/>
+        <result property="collectionCounts" column="collection_counts"/>
+        <collection property="user" ofType="User">
+            <id property="id" column="user.id"/>
+            <result property="nickName" column="nick_name"/>
+            <result property="describe" column="describe"/>
+        </collection>
+        <collection property="categories" ofType="Category">
+            <result property="categoryName" column="category_name"/>
+        </collection>
+    </resultMap>
+</mapper>

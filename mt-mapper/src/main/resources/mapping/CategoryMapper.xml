@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.CategoryMapper">
+
+    <!--查询全部分类信息-->
+    <select id="selCategory" resultType="Category">
+        SELECT * FROM `mt-category`
+    </select>
+
+    <!--查找是否存在该分类名-->
+    <select id="selCategoryByName" parameterType="Category" resultType="int">
+        SELECT count(1) FROM `mt-category` where category_name = #{categoryName}
+    </select>
+    <!--查找指定分类信息-->
+    <select id="selCategoryById" parameterType="int" resultType="Category">
+        SELECT * FROM `mt-category` WHERE id = #{id}
+    </select>
+    <!--插入分类信息-->
+    <insert id="insCategory" parameterType="Category">
+        INSERT INTO `mt-category` VALUES (default ,#{categoryName})
+    </insert>
+
+    <!--删除分类信息-->
+    <delete id="delCategory">
+        DELETE FROM `mt-category` WHERE id IN
+        <foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--更新分类信息-->
+    <update id="updCategory" parameterType="Category">
+       UPDATE `mt-category` SET `category_name`= #{categoryName} WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mt.blog.mapper.LinkMapper">
+
+    <!--查询全部友链信息-->
+    <select id="selLink" resultType="Link">
+        SELECT * FROM `mt-link`
+    </select>
+    <!--查找是否存在该分类名-->
+    <select id="selLinkByName" parameterType="Link" resultType="int">
+        SELECT count(1) FROM `mt-link` where web_name = #{webName}
+    </select>
+    <!--插入友链信息-->
+    <insert id="insLink" parameterType="Link">
+        INSERT INTO `mt-link` VALUES (#{id},#{author},#{webName},#{url},#{describe},0)
+    </insert>
+
+    <!--删除友链信息-->
+    <delete id="delLink">
+        DELETE FROM `mt-link` WHERE id IN
+        <foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--更新用户友链信息-->
+    <update id="updLink" parameterType="Link">
+       UPDATE `mt-link` SET `author`= #{author},`web_name`= #{webName},`url`= #{url},`describe`= #{describe} WHERE id = #{id}
+    </update>
+</mapper>
